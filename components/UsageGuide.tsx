@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     shadowColor: '#000',
+    justifyContent: 'space-around',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     width: '100%',
-    maxHeight: '70%',
+    maxHeight: '80%',
   },
   sectionTitle: {
     fontSize: 18,

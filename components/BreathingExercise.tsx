@@ -91,7 +91,6 @@ const BreathingExercise = () => {
   // 安全播放文本
   const speakText = (text: string) => {
     if (text === lastSpokenText) {
-      console.log("跳过重复播放:", text);
       return;
     }
     // 保存本次播放的文本，用于下次比较
@@ -116,7 +115,6 @@ const BreathingExercise = () => {
     if (cyclePosition < INHALE_DURATION) {
       // 吸气阶段
       if (currentPhase !== '吸气') {
-        console.log('切换到吸气阶段');
         setCurrentPhase('吸气');
         speakText('吸气');
         
@@ -137,7 +135,6 @@ const BreathingExercise = () => {
     } else if (cyclePosition < INHALE_DURATION + HOLD_DURATION) {
       // 屏息阶段
       if (currentPhase !== '屏息') {
-        console.log('切换到屏息阶段');
         setCurrentPhase('屏息');
         speakText('屏住呼吸');
         
@@ -150,7 +147,6 @@ const BreathingExercise = () => {
     } else {
       // 呼气阶段
       if (currentPhase !== '呼气') {
-        console.log('切换到呼气阶段');
         setCurrentPhase('呼气');
         speakText('呼气');
         
@@ -177,9 +173,6 @@ const BreathingExercise = () => {
     setIsActive(true);
     setTimeRemaining(DEFAULT_SESSION_DURATION);
     
-    // 播报开始练习
-    speakText('开始练习');
-    
     let startTime = Date.now();
     let lastUpdateTime = startTime;
     
@@ -192,17 +185,17 @@ const BreathingExercise = () => {
       // 更新剩余时间
       setTimeRemaining((prev: number) => Math.max(0, prev - elapsedSinceLastUpdate));
       
-      // 更新呼吸阶段
-      updateBreathingPhase(elapsedSinceStart);
-      
       // 更新时间戳
       lastUpdateTime = currentTime;
       
       // 检查是否完成练习
       if (elapsedSinceStart >= DEFAULT_SESSION_DURATION) {
         stopExercise(true); // 练习完成
+      } else {
+        // 更新呼吸阶段
+        updateBreathingPhase(elapsedSinceStart);
       }
-    }, 100); // 更新频率（100ms）
+    }, 10); // 更新频率（10ms）
   };
 
   // 停止练习
