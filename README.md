@@ -1,50 +1,91 @@
-# Welcome to your Expo app 👋
+# HRV呼吸调节应用 (MVP)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+这是一款帮助用户在情绪波动或焦虑时，通过呼吸训练快速恢复平静状态的App。App引导用户按照科学的HRV（心率变异性）呼吸节奏进行练习，提升副交感神经活性，缓解胸闷、心悸、压力大等情绪反应。
 
-## Get started
+## 功能特色
 
-1. Install dependencies
+- **HRV呼吸引导**: 吸气4秒 - 屏息2秒 - 呼气4秒的科学呼吸节奏
+- **语音播报**: 使用中文语音引导呼吸过程
+- **视觉动画**: 圆形视觉提示随呼吸节奏扩张/收缩
+- **自动计时**: 默认练习时长1分钟（可自定义）
+- **竖屏设计**: 专为手机用户优化的界面
 
-   ```bash
-   npm install
-   ```
+## 技术栈
 
-2. Start the app
+- React Native / Expo
+- TypeScript
+- React Navigation
+- Expo Speech API
 
-   ```bash
-    npx expo start
-   ```
+## 开始使用
 
-In the output, you'll find options to open the app in a
+### 前提条件
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node.js (推荐使用v18.x或更高版本)
+- npm或yarn
+- iOS环境需要Xcode
+- Android环境需要Android Studio
+- Expo Go应用（手机上快速预览）
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 本地运行
 
-## Get a fresh project
-
-When you're ready, run:
+1. 克隆项目后，进入项目目录：
 
 ```bash
-npm run reset-project
+cd HRV_Breathing_App
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. 安装依赖：
 
-## Learn more
+```bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+3. 启动开发服务器：
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm start
+# 或
+npx expo start
+```
 
-## Join the community
+4. 运行iOS模拟器（需要Mac环境）：
 
-Join our community of developers creating universal apps.
+```bash
+npm run ios
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+5. 运行Android模拟器：
+
+```bash
+npm run android
+```
+
+### 使用Expo Go直接预览
+
+1. 在手机上安装Expo Go应用
+2. 启动项目后，使用Expo Go扫描终端中显示的二维码
+
+## 发布到TestFlight
+
+1. 构建iOS应用：
+
+```bash
+eas build --platform ios
+```
+
+2. 提交到TestFlight：
+
+```bash
+eas submit --platform ios
+```
+
+## 项目结构
+
+- `/components` - 可复用组件
+- `/app` - 应用主界面
+- `/assets` - 静态资源（图片、图标等）
+
+## 贡献指南
+
+欢迎提交Issue和Pull Request来改进这个项目！

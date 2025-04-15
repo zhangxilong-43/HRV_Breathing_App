@@ -1,21 +1,28 @@
 {
+  "name": "HRV呼吸调节",
+  "displayName": "HRV呼吸调节",
   "expo": {
-    "name": "HRV_Breathing_App",
-    "slug": "HRV_Breathing_App",
+    "name": "HRV呼吸调节",
+    "slug": "hrvbreathingapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+    "description": "帮助用户通过HRV呼吸训练快速恢复平静状态的应用，提供科学的呼吸引导、语音提示和视觉反馈",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "primaryColor": "#3a86ff",
+    "githubUrl": "https://github.com/yourusername/HRV_Breathing_App",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +43,21 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8cadeca7-57d5-4cb4-8168-4731009fae87"
+      },
+      "router": {
+        "origin": false
+      }
+    },
+    "owner": "xiloong",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8cadeca7-57d5-4cb4-8168-4731009fae87"
     }
   }
 }
