@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Alert, Platform, Modal, FlatList } from 'react-native';
 import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import UsageGuide from './UsageGuide';
@@ -25,6 +25,9 @@ const BreathingExercise = () => {
   const [timeRemaining, setTimeRemaining] = useState(DEFAULT_SESSION_DURATION); // 剩余时间（ms）
   const [isReady, setIsReady] = useState(false); // 语音模块是否准备好
   const [showGuide, setShowGuide] = useState(false); // 显示使用指南
+  const [availableVoices, setAvailableVoices] = useState([]); // 可用的声音列表
+  const [selectedVoice, setSelectedVoice] = useState(null); // 当前选择的声音
+  const [showVoiceModal, setShowVoiceModal] = useState(false); // 显示声音选择模态框
   
   // 动画值
   const circleSize = useRef(new Animated.Value(1)).current;
@@ -36,14 +39,34 @@ const BreathingExercise = () => {
   useEffect(() => {
     const checkSpeechAvailability = async () => {
       try {
-        const available = await Speech.isAvailableAsync();
-        console.log('语音模块可用:', available);
-        setIsReady(available);
+        const voices = await Speech.getAvailableVoicesAsync();
+        console.log('语音模块可用:', voices);
         
-        if (!available) {
+        // 筛选中文声音
+        const chineseVoices = voices.filter(voice => 
+          voice.language?.toLowerCase().includes('zh') || 
+          voice.language?.includes('CN') || 
+          voice.language?.includes('TW') ||
+          voice.name?.toLowerCase().includes('chinese') ||
+          voice.name?.toLowerCase().includes('中文')
+        );
+        
+        setIsReady(voices.length > 0);
+        setAvailableVoices(chineseVoices.length > 0 ? chineseVoices : voices); // 如果没有中文声音，则显示所有声音
+        
+        // 默认选择第一个中文声音
+        setSelectedVoice(chineseVoices.length > 0 ? chineseVoices[0] : (voices.length > 0 ? voices[0] : null));
+        
+        if (!voices.length) {
           Alert.alert(
             '提示',
             '您的设备不支持语音功能，呼吸练习将没有语音提示。',
+            [{ text: '我知道了' }]
+          );
+        } else if (chineseVoices.length === 0) {
+          Alert.alert(
+            '提示',
+            '未找到中文语音，将显示所有可用语音',
             [{ text: '我知道了' }]
           );
         }
@@ -68,9 +91,10 @@ const BreathingExercise = () => {
   const speakText = (text: string) => {
     console.log('语音播报:', text);
     try {
-      if (isReady) {
+      if (isReady && selectedVoice) {
         Speech.speak(text, { 
-          language: 'zh',
+          voice: selectedVoice.identifier || selectedVoice.name,
+          language: selectedVoice.language || 'zh',
           onError: (error) => console.error('语音播报错误:', error),
           onStart: () => console.log('开始播报:', text),
           onDone: () => console.log('播报完成:', text)
@@ -258,6 +282,22 @@ const BreathingExercise = () => {
     setShowGuide(true);
   };
 
+  // 声音选择处理
+  const handleVoiceSelect = (voice) => {
+    setSelectedVoice(voice);
+    setShowVoiceModal(false);
+    console.log('已选择声音:', voice.name);
+  };
+
+  // 显示声音选择模态框
+  const openVoiceSelector = () => {
+    if (availableVoices.length > 0) {
+      setShowVoiceModal(true);
+    } else {
+      Alert.alert('提示', '没有可用的中文声音');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity 
@@ -292,7 +332,17 @@ const BreathingExercise = () => {
         <Text style={styles.buttonText}>{isActive ? '停止练习' : '开始练习'}</Text>
       </TouchableOpacity>
       
-      {!isReady && (
+      {isReady ? (
+        <TouchableOpacity 
+          style={styles.voiceSelector}
+          onPress={openVoiceSelector}
+        >
+          <Text style={styles.voiceSelectorText}>
+            当前声音: {selectedVoice ? (selectedVoice.name || '默认') : '未选择'}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color="#3a86ff" />
+        </TouchableOpacity>
+      ) : (
         <Text style={styles.warningText}>
           注意：语音功能不可用，将无语音提示
         </Text>
@@ -302,6 +352,49 @@ const BreathingExercise = () => {
         visible={showGuide}
         onClose={() => setShowGuide(false)}
       />
+      
+      {/* 声音选择模态框 */}
+      <Modal
+        transparent={true}
+        visible={showVoiceModal}
+        animationType="slide"
+        onRequestClose={() => setShowVoiceModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>选择中文语音</Text>
+            
+            {availableVoices.length > 0 ? (
+              <FlatList
+                data={availableVoices}
+                keyExtractor={(item, index) => item.identifier || `voice-${index}`}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={[
+                      styles.voiceItem,
+                      selectedVoice && selectedVoice.identifier === item.identifier && styles.selectedVoiceItem
+                    ]} 
+                    onPress={() => handleVoiceSelect(item)}
+                  >
+                    <Text style={styles.voiceName}>{item.name || '未命名'}</Text>
+                    <Text style={styles.voiceLanguage}>{item.language || '未知语言'}</Text>
+                  </TouchableOpacity>
+                )}
+                style={styles.voicesList}
+              />
+            ) : (
+              <Text style={styles.noVoicesText}>没有找到中文语音</Text>
+            )}
+            
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowVoiceModal(false)}
+            >
+              <Text style={styles.closeButtonText}>关闭</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -402,6 +495,87 @@ const styles = StyleSheet.create({
     top: 40,
     right: 20,
     zIndex: 10,
+  },
+  voiceSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#e6f0ff',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#3a86ff',
+  },
+  voiceSelectorText: {
+    color: '#3a86ff',
+    marginRight: 5,
+    fontSize: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#3a86ff',
+    marginBottom: 15,
+  },
+  voicesList: {
+    width: '100%',
+    maxHeight: 300,
+  },
+  voiceItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  selectedVoiceItem: {
+    backgroundColor: '#e6f0ff',
+  },
+  voiceName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  voiceLanguage: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 3,
+  },
+  closeButton: {
+    marginTop: 15,
+    backgroundColor: '#3a86ff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  noVoicesText: {
+    fontSize: 16,
+    color: '#666',
+    marginVertical: 20,
+    textAlign: 'center',
   },
 });
 
