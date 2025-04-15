@@ -40,7 +40,6 @@ const BreathingExercise = () => {
     const checkSpeechAvailability = async () => {
       try {
         const voices = await Speech.getAvailableVoicesAsync();
-        console.log('语音模块可用:', voices);
         
         // 筛选中文声音
         const chineseVoices = voices.filter(voice => 
@@ -87,17 +86,21 @@ const BreathingExercise = () => {
     setShowGuide(true);
   }, []);
 
+  // 添加一个变量来存储上次播放的文本
+  let lastSpokenText = "";
   // 安全播放文本
   const speakText = (text: string) => {
-    console.log('语音播报:', text);
+    if (text === lastSpokenText) {
+      console.log("跳过重复播放:", text);
+      return;
+    }
+    // 保存本次播放的文本，用于下次比较
+    lastSpokenText = text;
     try {
       if (isReady && selectedVoice) {
         Speech.speak(text, { 
           voice: selectedVoice.identifier || selectedVoice.name,
           language: selectedVoice.language || 'zh',
-          onError: (error) => console.error('语音播报错误:', error),
-          onStart: () => console.log('开始播报:', text),
-          onDone: () => console.log('播报完成:', text)
         });
       }
     } catch (error) {
@@ -170,7 +173,6 @@ const BreathingExercise = () => {
 
   // 启动练习
   const startExercise = () => {
-    console.log('开始练习');
     // 初始化状态
     setIsActive(true);
     setTimeRemaining(DEFAULT_SESSION_DURATION);
@@ -205,7 +207,6 @@ const BreathingExercise = () => {
 
   // 停止练习
   const stopExercise = (completed = false) => {
-    console.log('停止练习, 是否完成:', completed);
     // 清除计时器
     if (sessionTimer.current) {
       clearInterval(sessionTimer.current);
@@ -269,7 +270,6 @@ const BreathingExercise = () => {
 
   // 按钮点击处理
   const handleButtonPress = () => {
-    console.log('按钮被点击, 当前状态:', isActive ? '运行中' : '未运行');
     if (isActive) {
       stopExercise();
     } else {
@@ -286,7 +286,6 @@ const BreathingExercise = () => {
   const handleVoiceSelect = (voice) => {
     setSelectedVoice(voice);
     setShowVoiceModal(false);
-    console.log('已选择声音:', voice.name);
   };
 
   // 显示声音选择模态框
