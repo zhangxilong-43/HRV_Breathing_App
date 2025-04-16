@@ -12,7 +12,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "primaryColor": "#3a86ff",
-    "githubUrl": "https://github.com/yourusername/HRV_Breathing_App",
+    "githubUrl": "https://github.com/zhangxilong-43/HRV_Breathing_App",
     "ios": {
       "supportsTablet": true,
       "buildNumber": "1.0.0"

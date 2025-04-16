@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Alert, Platform, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Alert, Platform, Modal } from 'react-native';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import UsageGuide from './UsageGuide';
 
 // 屏幕尺寸
 const { width } = Dimensions.get('window');
-
-// 呼吸练习参数
-const INHALE_DURATION = 4000; // 吸气时间（ms）
-const HOLD_DURATION = 2000; // 屏息时间（ms）
-const EXHALE_DURATION = 4000; // 呼气时间（ms）
-const CYCLE_DURATION = INHALE_DURATION + HOLD_DURATION + EXHALE_DURATION; // 一个完整呼吸周期的时间
-const DEFAULT_SESSION_DURATION = 60000; // 默认练习时长（1分钟）
 
 // 音频文件
 const AUDIO_FILES = {
@@ -22,11 +15,35 @@ const AUDIO_FILES = {
   complete: require('../assets/audio/complete.mp3'),
 };
 
+interface BreathingExerciseProps {
+  title: string;
+  inhaleDuration: number;
+  holdInDuration: number;
+  exhaleDuration: number;
+  holdOutDuration: number;
+  cycles: number;
+  tipText?: string;
+}
+
 /**
- * HRV呼吸练习组件
+ * 呼吸练习组件
  * 用于引导用户按照特定的呼吸节奏进行练习
  */
-const BreathingExercise = () => {
+const BreathingExercise = ({
+  title = 'HRV 呼吸训练',
+  inhaleDuration = 4000,
+  holdInDuration = 2000,
+  exhaleDuration = 4000,
+  holdOutDuration = 0,
+  cycles = 6,
+  tipText,
+}: BreathingExerciseProps) => {
+  // 计算一个完整周期的时间
+  const CYCLE_DURATION = inhaleDuration + holdInDuration + exhaleDuration + holdOutDuration;
+  
+  // 计算会话总时间（毫秒）
+  const DEFAULT_SESSION_DURATION = CYCLE_DURATION * cycles;
+  
   // 状态管理
   const [isActive, setIsActive] = useState(false); // 练习是否正在进行
   const [currentPhase, setCurrentPhase] = useState('准备开始'); // 当前呼吸阶段
@@ -71,13 +88,15 @@ const BreathingExercise = () => {
     setupAudio();
     
     // 首次打开应用时自动显示使用指南
-    setShowGuide(true);
+    if (tipText) {
+      setShowGuide(true);
+    }
 
     // 清理函数
     return () => {
       cleanupAudio();
     };
-  }, []);
+  }, [tipText]);
 
   // 清理音频资源
   const cleanupAudio = async () => {
@@ -144,7 +163,7 @@ const BreathingExercise = () => {
     const cyclePosition = elapsedTime % CYCLE_DURATION;
     
     // 根据当前周期内的位置确定呼吸阶段
-    if (cyclePosition < INHALE_DURATION) {
+    if (cyclePosition < inhaleDuration) {
       // 吸气阶段
       if (currentPhase !== '吸气') {
         setCurrentPhase('吸气');
@@ -154,18 +173,18 @@ const BreathingExercise = () => {
         Animated.parallel([
           Animated.timing(circleSize, {
             toValue: 2.2,
-            duration: INHALE_DURATION,
+            duration: inhaleDuration,
             useNativeDriver: false,
           }),
           Animated.timing(circleOpacity, {
             toValue: 0.6,
-            duration: INHALE_DURATION,
+            duration: inhaleDuration,
             useNativeDriver: false,
           })
         ]).start();
       }
-    } else if (cyclePosition < INHALE_DURATION + HOLD_DURATION) {
-      // 屏息阶段
+    } else if (cyclePosition < inhaleDuration + holdInDuration) {
+      // 吸气后屏息阶段
       if (currentPhase !== '屏息') {
         setCurrentPhase('屏息');
         playAudio('hold');
@@ -176,7 +195,7 @@ const BreathingExercise = () => {
           Animated.timing(circleOpacity, { toValue: 0.6, duration: 1, useNativeDriver: false })
         ]).stop();
       }
-    } else {
+    } else if (cyclePosition < inhaleDuration + holdInDuration + exhaleDuration) {
       // 呼气阶段
       if (currentPhase !== '呼气') {
         setCurrentPhase('呼气');
@@ -186,16 +205,26 @@ const BreathingExercise = () => {
         Animated.parallel([
           Animated.timing(circleSize, {
             toValue: 1,
-            duration: EXHALE_DURATION,
+            duration: exhaleDuration,
             useNativeDriver: false,
           }),
           Animated.timing(circleOpacity, {
             toValue: 0.2,
-            duration: EXHALE_DURATION,
+            duration: exhaleDuration,
             useNativeDriver: false,
           })
         ]).start();
       }
+    } else if (holdOutDuration > 0 && currentPhase !== '屏息(呼气后)') {
+      // 呼气后屏息阶段 (仅当有呼气后屏息时间时)
+      setCurrentPhase('屏息(呼气后)');
+      playAudio('hold');
+      
+      // 保持圆形大小
+      Animated.parallel([
+        Animated.timing(circleSize, { toValue: 1, duration: 1, useNativeDriver: false }),
+        Animated.timing(circleOpacity, { toValue: 0.2, duration: 1, useNativeDriver: false })
+      ]).stop();
     }
   };
 
@@ -242,7 +271,7 @@ const BreathingExercise = () => {
     setIsActive(false);
     setCurrentPhase('准备开始');
     
-    // 重置计时器到1分钟
+    // 重置计时器到默认时长
     setTimeRemaining(DEFAULT_SESSION_DURATION);
     
     // 动画重置
@@ -307,16 +336,40 @@ const BreathingExercise = () => {
     setShowGuide(true);
   };
 
+  // 获取呼吸说明文本
+  const getInstructionText = () => {
+    let text = '按照提示进行呼吸：';
+    
+    if (inhaleDuration > 0) {
+      text += `吸气 ${inhaleDuration/1000} 秒`;
+    }
+    
+    if (holdInDuration > 0) {
+      text += `，屏息 ${holdInDuration/1000} 秒`;
+    }
+    
+    if (exhaleDuration > 0) {
+      text += `，呼气 ${exhaleDuration/1000} 秒`;
+    }
+    
+    if (holdOutDuration > 0) {
+      text += `，屏息 ${holdOutDuration/1000} 秒`;
+    }
+    
+    return text;
+  };
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.helpButton}
-        onPress={openGuide}
-      >
-        <Ionicons name="help-circle-outline" size={28} color="#3a86ff" />
-      </TouchableOpacity>
-      
-      <Text style={styles.title}>HRV 呼吸训练</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>{title}</Text>
+        <TouchableOpacity 
+          style={styles.helpButton}
+          onPress={openGuide}
+        >
+          <Ionicons name="help-circle-outline" size={26} color="#3a86ff" />
+        </TouchableOpacity>
+      </View>
       
       <View style={styles.timerContainer}>
         <Text style={styles.timer}>{formatTimeRemaining(timeRemaining)}</Text>
@@ -329,7 +382,7 @@ const BreathingExercise = () => {
       
       <View style={styles.instructionContainer}>
         <Text style={styles.instruction}>
-          按照提示进行呼吸：吸气 4 秒，屏息 2 秒，呼气 4 秒
+          {getInstructionText()}
         </Text>
       </View>
       
@@ -350,6 +403,8 @@ const BreathingExercise = () => {
       <UsageGuide
         visible={showGuide}
         onClose={() => setShowGuide(false)}
+        title={title}
+        content={tipText || '遵循屏幕上的呼吸提示，专注于当前呼吸，让心情平静下来。'}
       />
     </View>
   );
@@ -364,11 +419,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f9ff', // 舒缓背景颜色
     padding: 20,
   },
+  headerContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 30,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    zIndex: 50, // 确保标题在适当的层级
+  },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#3a86ff',
-    marginBottom: 30,
+    textAlign: 'center',
+    marginLeft: 40, // 为左侧返回按钮留出空间
+    marginRight: 40, // 保持对称
+  },
+  helpButton: {
+    position: 'absolute',
+    right: 5,
   },
   timerContainer: {
     marginBottom: 20,
@@ -445,12 +516,6 @@ const styles = StyleSheet.create({
     color: '#ff3a6c',
     fontSize: 14,
     textAlign: 'center',
-  },
-  helpButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    zIndex: 10,
   },
 });
 

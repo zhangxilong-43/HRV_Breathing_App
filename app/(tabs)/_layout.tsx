@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 /**
  * 底部导航栏布局
- * 简化为仅显示首页的HRV呼吸练习
+ * 展示三个主要功能Tab: 阳光(呼吸训练)、放松(肌肉放松)、冥想(正念冥想)
  */
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -20,8 +20,22 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: '呼吸练习',
-          tabBarIcon: ({ color }) => <Ionicons name="heart" size={24} color={color} />,
+          title: '阳光',
+          tabBarIcon: ({ color }) => <Ionicons name="sunny-outline" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="relax"
+        options={{
+          title: '放松',
+          tabBarIcon: ({ color }) => <Ionicons name="body-outline" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="meditation"
+        options={{
+          title: '冥想',
+          tabBarIcon: ({ color }) => <Ionicons name="leaf-outline" size={24} color={color} />,
         }}
       />
     </Tabs>
