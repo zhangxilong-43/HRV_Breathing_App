@@ -5,10 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import BreathingExercise from '../../components/BreathingExercise';
 import CustomBreathingSettings from '../../components/CustomBreathingSettings';
 import { BREATHING_PATTERNS } from '../../constants/breathing';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function BreathingSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets(); // 获取安全区域信息
   const [customSettings, setCustomSettings] = useState({
     inhaleDuration: 4000,
     holdInDuration: 2000,
@@ -57,9 +59,12 @@ export default function BreathingSessionScreen() {
         />
       </View> */}
       
-      {/* 自定义返回按钮 */}
+      {/* 自定义返回按钮 - 使用动态计算的位置 */}
       <TouchableOpacity 
-        style={styles.backButton} 
+        style={[
+          styles.backButton,
+          { top: insets.top + 25 } // 动态设置顶部距离(安全区域顶部 + 25px的额外间距)
+        ]} 
         onPress={handleBack}
         activeOpacity={0.7}
       >
@@ -94,7 +99,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 30,
     left: 15,
     zIndex: 100,
     width: 40,
