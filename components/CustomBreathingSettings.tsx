@@ -130,10 +130,17 @@ export default function CustomBreathingSettings({
               (settings.inhaleDuration + settings.holdInDuration + 
               settings.exhaleDuration + settings.holdOutDuration) / 1000
             )} 秒。
-            总训练时间约 {Math.round(
-              (settings.inhaleDuration + settings.holdInDuration + 
-              settings.exhaleDuration + settings.holdOutDuration) * settings.cycles / 1000 / 60
-            )} 分钟。
+            {(() => {
+              // 计算总秒数
+              const totalSeconds = (settings.inhaleDuration + settings.holdInDuration + 
+                settings.exhaleDuration + settings.holdOutDuration) * settings.cycles / 1000;
+              // 如果小于60秒，显示秒数
+              if (totalSeconds < 60) {
+                return `总训练时间约 ${Math.round(totalSeconds)} 秒。`;
+              }
+              // 否则显示分钟数
+              return `总训练时间约 ${Math.round(totalSeconds / 60)} 分钟。`;
+            })()}
           </Text>
         </View>
       </ScrollView>
