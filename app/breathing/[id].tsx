@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView, StatusBar, Platform, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import BreathingExercise from '../../components/BreathingExercise';
-import CustomBreathingSettings from '../../components/CustomBreathingSettings';
+import BreathingExercise from '../../src/components/breathing/BreathingExercise';
+import CustomBreathingSettings from '../../src/components/breathing/CustomBreathingSettings';
 import { BREATHING_PATTERNS } from '../../constants/breathing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
